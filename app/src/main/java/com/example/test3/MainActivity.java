@@ -1,26 +1,73 @@
 package com.example.test3;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    
+    EditText editTask;
+    Button btnAdd;
+    RecyclerView recyclerView;
+    ArrayList<String> taskList;
+    TaskAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+
+        editTask = findViewById(R.id.editTask);
+        btnAdd = findViewById(R.id.btnAdd);
+        recyclerView = findViewById(R.id.recyclerTasks);
+
+        taskList = loadTasks();
+
+        adapter = new TaskAdapter(this, taskList);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
+
+        btnAdd.setOnClickListener(v -> {
+            String task = editTask.getText().toString().trim();
+            if (!task.isEmpty()) {
+                taskList.add(task);
+                adapter.notifyItemInserted(taskList.size() - 1);
+                editTask.setText("");
+                saveTasks();
+            }
         });
     }
+
+    private void saveTasks() {
+        SharedPreferences prefs = getSharedPreferences("tasks", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt("size", taskList.size());
+        for (int i = 0; i < taskList.size(); i++) {
+            editor.putString("task_" + i, taskList.get(i));
+        }
+        editor.apply();
+    }
+
+    private ArrayList<String> loadTasks() {
+        SharedPreferences prefs = getSharedPreferences("tasks", MODE_PRIVATE);
+        int size = prefs.getInt("size", 0);
+        ArrayList<String> tasks = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            tasks.add(prefs.getString("task_" + i, null));
+        }
+        return tasks;
+    }
+
+
 }
