@@ -13,12 +13,15 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
     EditText editTask;
-    Button btnAdd;
+    //Button btnAdd;
+    FloatingActionButton btnAdd;
     RecyclerView recyclerView;
     ArrayList<String> taskList;
     TaskAdapter adapter;
@@ -29,8 +32,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         editTask = findViewById(R.id.editTask);
-        btnAdd = findViewById(R.id.btnAdd);
+
         recyclerView = findViewById(R.id.recyclerTasks);
+        btnAdd = findViewById(R.id.btnAdd);
 
         taskList = loadTasks();
 
