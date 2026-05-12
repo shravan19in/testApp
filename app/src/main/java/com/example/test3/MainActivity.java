@@ -1,7 +1,10 @@
 package com.example.test3;
 
+import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -16,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     ArrayList<String> taskList;
     TaskAdapter adapter;
+    Calendar calendar = Calendar.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
+        btnAdd.setOnClickListener(v -> showAddTaskDialog());
         btnAdd.setOnClickListener(v -> {
             String task = editTask.getText().toString().trim();
             if (!task.isEmpty()) {
@@ -51,7 +57,9 @@ public class MainActivity extends AppCompatActivity {
                 saveTasks();
             }
         });
+
     }
+
 
     private void saveTasks() {
         SharedPreferences prefs = getSharedPreferences("tasks", MODE_PRIVATE);
@@ -72,6 +80,40 @@ public class MainActivity extends AppCompatActivity {
         }
         return tasks;
     }
+    private void showAddTaskDialog() {
 
+        View view = getLayoutInflater().inflate(R.layout.date, null);
 
-}
+        EditText taskInput = view.findViewById(R.id.dialogTaskInput);
+        Button btnDate = view.findViewById(R.id.btnPickDate);
+        Button btnTime = view.findViewById(R.id.btnPickTime);
+        Button btnSave = view.findViewById(R.id.btnSave);
+
+        Calendar calendar = Calendar.getInstance();
+
+        // Create dialog
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(view)
+                .create();
+        }
+        btnDate.setOnClickListener(view -> {
+
+        DatePickerDialog datePicker = new DatePickerDialog(
+                this,
+                (dateView, year, month, day) -> {
+
+                    calendar.set(Calendar.YEAR, year);
+                    calendar.set(Calendar.MONTH, month);
+                    calendar.set(Calendar.DAY_OF_MONTH, day);
+
+                    btnDate.setText(day + "/" + (month + 1) + "/" + year);
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+
+        datePicker.show();
+    });
+
+    }
