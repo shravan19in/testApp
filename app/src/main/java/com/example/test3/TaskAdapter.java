@@ -1,9 +1,9 @@
 package com.example.test3;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -16,10 +16,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     private ArrayList<String> tasks;
     private Context context;
+    private Runnable onTaskChanged; // FIX: callback to save after delete
 
-    public TaskAdapter(Context context, ArrayList<String> tasks) {
+    public TaskAdapter(Context context, ArrayList<String> tasks, Runnable onTaskChanged) {
         this.context = context;
         this.tasks = tasks;
+        this.onTaskChanged = onTaskChanged;
     }
 
     @NonNull
@@ -35,9 +37,14 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         holder.textTask.setText(tasks.get(position));
 
         holder.btnDelete.setOnClickListener(v -> {
-            tasks.remove(position);
-            notifyItemRemoved(position);
-            notifyItemRangeChanged(position, tasks.size());
+            // FIX: use getAdapterPosition() to avoid stale position
+            int pos = holder.getAdapterPosition();
+            if (pos != RecyclerView.NO_ID) {
+                tasks.remove(pos);
+                notifyItemRemoved(pos);
+                notifyItemRangeChanged(pos, tasks.size());
+                onTaskChanged.run(); // FIX: save after delete
+            }
         });
     }
 
