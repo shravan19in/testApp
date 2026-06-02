@@ -1,6 +1,5 @@
 package com.example.test3;
 
-import android.Manifest;
 import android.app.AlertDialog;
 import android.app.AlarmManager;
 import android.app.DatePickerDialog;
@@ -15,10 +14,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-import androidx.annotation.RequiresPermission;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.content.pm.PackageManager;
+import android.Manifest;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -31,6 +35,18 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     ArrayList<String> taskList;
     TaskAdapter adapter;
+
+    // Launcher for requesting POST_NOTIFICATIONS permission
+    private final ActivityResultLauncher<String> notificationPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
+                if (!granted) {
+                    new AlertDialog.Builder(this)
+                            .setTitle("Notifications Disabled")
+                            .setMessage("You won't receive task reminders unless notifications are enabled. You can enable them in Settings.")
+                            .setPositiveButton("OK", null)
+                            .show();
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +63,18 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         btnAdd.setOnClickListener(v -> showAddTaskDialog());
+
+        // Request notification permission on Android 13+
+        requestNotificationPermission();
+    }
+
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
     }
 
     public void saveTasks() {
@@ -69,14 +97,12 @@ public class MainActivity extends AppCompatActivity {
         return tasks;
     }
 
-    @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     private void scheduleNotification(String taskName, Calendar triggerTime) {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
         Intent intent = new Intent(this, TaskReminderReceiver.class);
         intent.putExtra(TaskReminderReceiver.EXTRA_TASK_NAME, taskName);
 
-        // Use task name hashCode as request code so each task gets a unique PendingIntent
         int requestCode = taskName.hashCode();
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
@@ -88,20 +114,11 @@ public class MainActivity extends AppCompatActivity {
 
         long triggerMillis = triggerTime.getTimeInMillis();
 
-        // setExactAndAllowWhileIdle works on Android 6+ without needing SCHEDULE_EXACT_ALARM
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerMillis,
-                    pendingIntent
-            );
-        } else {
-            alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerMillis,
-                    pendingIntent
-            );
-        }
+        alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                triggerMillis,
+                pendingIntent
+        );
     }
 
     private void showAddTaskDialog() {
@@ -159,10 +176,7 @@ public class MainActivity extends AppCompatActivity {
                 taskList.add(fullTask);
                 adapter.notifyItemInserted(taskList.size() - 1);
                 saveTasks();
-
-                // Schedule the notification at the chosen date/time
                 scheduleNotification(taskText, calendar);
-
                 dialog.dismiss();
             } else {
                 taskInput.setError("Enter a task name");

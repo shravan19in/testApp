@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="gradient_start">#4A00E0</color>
+    <color name="gradient_end">#8E2DE2</color>
+    <color name="accent_blue">#00C6FF</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="text_primary">#1A1A2E</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="surface">#F3F0FF</color>
+    <color name="delete_red">#FF4D6D</color>
 </resources>

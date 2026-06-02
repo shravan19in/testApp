@@ -4,31 +4,48 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/card_bg">
 
     <LinearLayout
-        android:orientation="horizontal"
-        android:padding="16dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="14dp">
 
+        <!-- Colored accent bar -->
+        <View
+            android:layout_width="4dp"
+            android:layout_height="40dp"
+            android:background="@drawable/gradient_fab"
+            android:layout_marginEnd="14dp"/>
+
+        <!-- Task text -->
         <TextView
             android:id="@+id/textTask"
-            android:textSize="18sp"
-            android:textColor="#000000"
-            android:layout_weight="1"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="15sp"
+            android:textColor="@color/text_primary"
+            android:lineSpacingExtra="3dp"/>
 
+        <!-- Delete button -->
         <ImageButton
             android:id="@+id/btnDelete"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:src="@android:drawable/ic_menu_delete"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Delete"
-            app:tint="#B00020"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-        </LinearLayout>
+            android:background="@android:color/transparent"
+            android:tint="@color/delete_red"
+            android:contentDescription="Delete task"/>
+
+    </LinearLayout>
+
 </androidx.cardview.widget.CardView>

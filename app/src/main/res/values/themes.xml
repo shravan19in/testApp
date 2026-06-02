@@ -1,14 +1,29 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
     <style name="Base.Theme.Test3" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">#4A00E0</item>
+        <item name="colorPrimaryVariant">#8E2DE2</item>
+        <item name="colorSecondary">#00C6FF</item>
+        <item name="colorSurface">#F3F0FF</item>
+        <item name="android:windowBackground">@color/surface</item>
     </style>
 
     <style name="Theme.Test3" parent="Base.Theme.Test3" />
-    <style name="Theme.TodoApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">#6750A4</item>
-        <item name="colorPrimaryVariant">#5A3E9C</item>
-        <item name="colorSecondary">#03DAC5</item>
+
+    <!-- Card style for task items -->
+    <style name="TaskCard">
+        <item name="cardCornerRadius">18dp</item>
+        <item name="cardElevation">6dp</item>
+        <item name="cardBackgroundColor">@color/card_bg</item>
+    </style>
+
+    <!-- Bold gradient button -->
+    <style name="GradientButton" parent="Widget.Material3.Button">
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
+        <item name="cornerRadius">30dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:textStyle">bold</item>
     </style>
 </resources>
