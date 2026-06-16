@@ -13,6 +13,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
+import android.Manifest;
+import android.content.pm.PackageManager;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -20,9 +23,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.content.pm.PackageManager;
-import android.Manifest;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -33,16 +33,16 @@ public class MainActivity extends AppCompatActivity {
 
     FloatingActionButton btnAdd;
     RecyclerView recyclerView;
+    TextView taskCountText;
     ArrayList<String> taskList;
     TaskAdapter adapter;
 
-    // Launcher for requesting POST_NOTIFICATIONS permission
     private final ActivityResultLauncher<String> notificationPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
                 if (!granted) {
                     new AlertDialog.Builder(this)
                             .setTitle("Notifications Disabled")
-                            .setMessage("You won't receive task reminders unless notifications are enabled. You can enable them in Settings.")
+                            .setMessage("You won't receive task reminders unless notifications are enabled.")
                             .setPositiveButton("OK", null)
                             .show();
                 }
@@ -55,17 +55,25 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView = findViewById(R.id.recyclerTasks);
         btnAdd = findViewById(R.id.btnAdd);
+        taskCountText = findViewById(R.id.taskCountText);
 
         taskList = loadTasks();
+        updateTaskCount();
 
-        adapter = new TaskAdapter(this, taskList, this::saveTasks);
+        adapter = new TaskAdapter(this, taskList, () -> {
+            saveTasks();
+            updateTaskCount();
+        });
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
         btnAdd.setOnClickListener(v -> showAddTaskDialog());
-
-        // Request notification permission on Android 13+
         requestNotificationPermission();
+    }
+
+    private void updateTaskCount() {
+        int count = taskList.size();
+        taskCountText.setText(count == 1 ? "1 task" : count + " tasks");
     }
 
     private void requestNotificationPermission() {
@@ -99,26 +107,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void scheduleNotification(String taskName, Calendar triggerTime) {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-
         Intent intent = new Intent(this, TaskReminderReceiver.class);
         intent.putExtra(TaskReminderReceiver.EXTRA_TASK_NAME, taskName);
 
-        int requestCode = taskName.hashCode();
-
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 this,
-                requestCode,
+                taskName.hashCode(),
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        long triggerMillis = triggerTime.getTimeInMillis();
-
-        alarmManager.set(
-                AlarmManager.RTC_WAKEUP,
-                triggerMillis,
-                pendingIntent
-        );
+        alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime.getTimeInMillis(), pendingIntent);
     }
 
     private void showAddTaskDialog() {
@@ -134,48 +133,38 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(view)
                 .create();
+        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
 
-        btnDate.setOnClickListener(v -> {
-            DatePickerDialog datePicker = new DatePickerDialog(
-                    this,
-                    (dateView, year, month, day) -> {
-                        calendar.set(Calendar.YEAR, year);
-                        calendar.set(Calendar.MONTH, month);
-                        calendar.set(Calendar.DAY_OF_MONTH, day);
-                        btnDate.setText(day + "/" + (month + 1) + "/" + year);
-                    },
-                    calendar.get(Calendar.YEAR),
-                    calendar.get(Calendar.MONTH),
-                    calendar.get(Calendar.DAY_OF_MONTH)
-            );
-            datePicker.show();
-        });
+        btnDate.setOnClickListener(v -> new DatePickerDialog(this,
+                (dateView, year, month, day) -> {
+                    calendar.set(Calendar.YEAR, year);
+                    calendar.set(Calendar.MONTH, month);
+                    calendar.set(Calendar.DAY_OF_MONTH, day);
+                    btnDate.setText("📅  " + day + "/" + (month + 1) + "/" + year);
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)).show());
 
-        btnTime.setOnClickListener(v -> {
-            TimePickerDialog timePicker = new TimePickerDialog(
-                    this,
-                    (timeView, hour, minute) -> {
-                        calendar.set(Calendar.HOUR_OF_DAY, hour);
-                        calendar.set(Calendar.MINUTE, minute);
-                        btnTime.setText(String.format("%02d:%02d", hour, minute));
-                    },
-                    calendar.get(Calendar.HOUR_OF_DAY),
-                    calendar.get(Calendar.MINUTE),
-                    true
-            );
-            timePicker.show();
-        });
+        btnTime.setOnClickListener(v -> new TimePickerDialog(this,
+                (timeView, hour, minute) -> {
+                    calendar.set(Calendar.HOUR_OF_DAY, hour);
+                    calendar.set(Calendar.MINUTE, minute);
+                    btnTime.setText(String.format("🕐  %02d:%02d", hour, minute));
+                },
+                calendar.get(Calendar.HOUR_OF_DAY),
+                calendar.get(Calendar.MINUTE),
+                true).show());
 
         btnSave.setOnClickListener(v -> {
             String taskText = taskInput.getText().toString().trim();
-
             if (!taskText.isEmpty()) {
                 String fullTask = taskText + "\n" +
                         android.text.format.DateFormat.format("MMM dd, yyyy - HH:mm", calendar);
-
                 taskList.add(fullTask);
                 adapter.notifyItemInserted(taskList.size() - 1);
                 saveTasks();
+                updateTaskCount();
                 scheduleNotification(taskText, calendar);
                 dialog.dismiss();
             } else {
